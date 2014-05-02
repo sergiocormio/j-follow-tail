@@ -116,7 +116,6 @@ public class LogFilePanel extends JPanel implements PropertyChangeListener {
 	
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
-		System.out.println("Name = " + evt.getPropertyName());
 		if(LogFile.LOG_FILE_CHANGED.equals(evt.getPropertyName())){
 			SwingUtilities.invokeLater(new Runnable(){
 
@@ -124,8 +123,7 @@ public class LogFilePanel extends JPanel implements PropertyChangeListener {
 				public void run() {
 					logText.setText(logFile.getFileContent().toString());
 					logText.updateUI();
-					System.out.println("Escuche el cambio completo");
-					
+//					processHighlightings(highlightings);
 				}
 				
 			});

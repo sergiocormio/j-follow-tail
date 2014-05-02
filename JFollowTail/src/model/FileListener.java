@@ -16,7 +16,7 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 
 /**
- * Class encharge of listening file changes from file system
+ * Class in charge of listening file changes from file system
  * 
  * @author Sergio Cormio
  * 
@@ -27,18 +27,24 @@ public class FileListener implements Runnable {
 	private WatchService service;
 	private File file;
 	private PropertyChangeSupport propertyChangeSupport;
+	private long lastLength = 0l;
 
 	public FileListener(File file) throws IOException {
 		this.file = file;
 		propertyChangeSupport = new PropertyChangeSupport(this);
+//		setWatcherService();
+		// Start the infinite polling loop
+		new Thread(this).start();
+	}
+
+	@SuppressWarnings("unused")
+	private void setWatcherService() throws IOException {
 		// Path must be a directory
 		Path path = Paths.get(file.getParentFile().toURI());
 		service = path.getFileSystem().newWatchService();
 		// We register the path to the service
 		// We watch for creation events
 		path.register(service, ENTRY_CREATE, ENTRY_MODIFY);
-		// Start the infinite polling loop
-		new Thread(this).start();
 	}
 
 	public void addPropertyChangeListener(PropertyChangeListener listener) {
@@ -47,6 +53,28 @@ public class FileListener implements Runnable {
 
 	@Override
 	public void run() {
+		doRunManualMode();
+//		doRunWithWatcherService();
+	}
+	
+	private void doRunManualMode() {
+		while (!stop) {
+			//A file changes when his length changes
+			if(file.length()!=lastLength){
+				lastLength = file.length();
+				propertyChangeSupport.firePropertyChange(FILE_WAS_MODIFIED, null, file);
+			}
+			try {
+				//TODO make this value variable
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	@SuppressWarnings("unused")
+	private void doRunWithWatcherService() {
 		WatchKey key = null;
 
 		while (!stop) {
@@ -72,7 +100,6 @@ public class FileListener implements Runnable {
 								.context();
 						if (modifiedPath.endsWith(file.getName())) {
 							// Output
-							System.out.println("Se Modificó!!!" + modifiedPath);
 							propertyChangeSupport.firePropertyChange(
 									FILE_WAS_MODIFIED, null, file);
 						}
@@ -86,5 +113,6 @@ public class FileListener implements Runnable {
 				e.printStackTrace();
 			}
 		}
+
 	}
 }

@@ -73,7 +73,6 @@ public class LogFile implements PropertyChangeListener {
 
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
-		System.out.println("Name = " + evt.getPropertyName());
 		if(FileListener.FILE_WAS_MODIFIED.equals(evt.getPropertyName())){
 			try {
 				loadFile();
