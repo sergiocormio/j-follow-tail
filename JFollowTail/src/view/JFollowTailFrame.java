@@ -10,6 +10,7 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -32,7 +33,7 @@ import view.highlightings.Highlighting;
 import view.highlightings.HighlightingPersistor;
 import view.highlightings.HighlightingsDialog;
 
-public class JFollowTailFrame extends JFrame {
+public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 
 	private static final String APP_TITLE = "JFollowTail";
 	/**
@@ -66,7 +67,8 @@ public class JFollowTailFrame extends JFrame {
 	
 	private void createLogFilePanel() {
 		tabbedPane = new JTabbedPane();
-		logFilePanel = new LogFilePanel();
+		logFilePanel = new LogFilePanel(this);
+		logFilePanel.addPropertyChangeListener(this);
 		tabbedPane.addTab(logFilePanel.getFileName(),ResourcesFactory.getLogIcon(), logFilePanel, logFilePanel.getPath());
 		this.add(tabbedPane,BorderLayout.CENTER);
 	}
@@ -105,18 +107,25 @@ public class JFollowTailFrame extends JFrame {
 					@Override
 					public void propertyChange(PropertyChangeEvent evt) {
 						if(evt.getPropertyName().equals(HighlightingsDialog.LIST_CHANGED_EVENT)){
-							JFollowTailFrame.this.logFilePanel.processHighlightings(JFollowTailFrame.this.highlightings);
+							JFollowTailFrame.this.logFilePanel.processHighlightings();
 						}
 					}
 				});
 				highlightingsDialog.setVisible(true);
-				JFollowTailFrame.this.logFilePanel.processHighlightings(JFollowTailFrame.this.highlightings);
+				JFollowTailFrame.this.logFilePanel.processHighlightings();
 			}
 		});
 		
 		topLeftPanel.add(adminHighlightingButton);
 		
 		followTailCheckBox = new JCheckBox("Follow Tail");
+		followTailCheckBox.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				logFilePanel.setFollowTail(followTailCheckBox.isSelected());
+			}
+		});
 		topLeftPanel.add(followTailCheckBox);
 		
 		topPanel.add(topLeftPanel,BorderLayout.WEST);
@@ -217,5 +226,16 @@ public class JFollowTailFrame extends JFrame {
 				}
 			}
 		});
+	}
+
+	public List<Highlighting> getHighlightings() {
+		return highlightings;
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent evt) {
+		if(LogFilePanel.SCROLL_CHANGED_BY_USER.equals(evt.getPropertyName())){
+			evt.getSource();
+		}
 	}
 }
