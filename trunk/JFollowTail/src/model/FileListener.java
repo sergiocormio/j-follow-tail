@@ -31,6 +31,7 @@ public class FileListener implements Runnable {
 
 	public FileListener(File file) throws IOException {
 		this.file = file;
+		lastLength = file.length();
 		propertyChangeSupport = new PropertyChangeSupport(this);
 //		setWatcherService();
 		// Start the infinite polling loop
@@ -113,6 +114,11 @@ public class FileListener implements Runnable {
 				e.printStackTrace();
 			}
 		}
+		System.out.println("Listener Stopped successfully");
 
+	}
+
+	public synchronized void stop() {
+		stop = true;
 	}
 }

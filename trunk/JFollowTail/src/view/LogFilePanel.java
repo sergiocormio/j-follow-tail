@@ -1,97 +1,110 @@
 package view;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultHighlighter;
-import javax.swing.text.Highlighter;
+import javax.swing.table.DefaultTableModel;
 
 import model.LogFile;
+
+import org.jdesktop.swingx.JXTable;
+import org.jdesktop.swingx.decorator.ColorHighlighter;
+import org.jdesktop.swingx.decorator.Highlighter;
+import org.jdesktop.swingx.decorator.PatternPredicate;
+
 import view.highlightings.Highlighting;
 
 public class LogFilePanel extends JPanel implements PropertyChangeListener {
 
-	/**
-	 * 
-	 */
+	public static final String SCROLL_CHANGED_BY_USER = "Scroll changed by user";
 	private static final long serialVersionUID = 1L;
-	private JTextArea logText;
+	private JXTable table;
 	private JScrollPane viewLogScrollPane;
 	private LogFile logFile;
+	private DefaultTableModel tableModel;
+	private JFollowTailFrame parentFrame;
 	
-	public LogFilePanel(){
+	public LogFilePanel(JFollowTailFrame parentFrame){
+		this.parentFrame = parentFrame;
 		createUI();
 	}
 	
 	private void createUI() {
 		setLayout(new BorderLayout());
-		logText = new JTextArea();
-		logText.setEditable(false);
-		viewLogScrollPane = new JScrollPane(logText);
+		initTable();
+		viewLogScrollPane = new JScrollPane(table);
+		viewLogScrollPane.getViewport().setBackground(Color.WHITE);
+		viewLogScrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
+			
+			@Override
+			public void adjustmentValueChanged(AdjustmentEvent e) {
+				if(logFile==null){
+					return;
+				}
+				boolean oldValue = logFile.isFollowTail();
+				//if reaches the maximum of scroll -> set follow Tail
+				//TODO: Complete this
+				System.out.println("e.getValue(): " + e.getValue());
+				System.out.println("viewLogScrollPane.getVerticalScrollBar().getVisibleAmount(): " + viewLogScrollPane.getVerticalScrollBar().getVisibleAmount());
+				System.out.println("e.getAdjustable().getMaximum(): " + e.getAdjustable().getMaximum());
+				if(e.getValue() == e.getAdjustable().getMaximum()-viewLogScrollPane.getVerticalScrollBar().getVisibleAmount()){
+					logFile.setFollowTail(true);
+				}else{
+					logFile.setFollowTail(false);
+				}
+				firePropertyChange(SCROLL_CHANGED_BY_USER, oldValue, logFile.isFollowTail());
+			}
+		});
+		
 		add(viewLogScrollPane, BorderLayout.CENTER);
 	}
 
-	public void processHighlightings(List<Highlighting> highlightings){
-		Highlighter highlighter = logText.getHighlighter();
-		highlighter.removeAllHighlights();
-		//if completeText is empty
-		if(logText.getText() == null || logText.getText().trim().length() == 0){
-			return;
-		}
-		//Complete text in upper case
-		String text = logText.getText().toUpperCase();
-		for(Highlighting highlighting : highlightings){
-			int lastIndex = -1;
-			try {
-				if(highlighting.getToken() != null && highlighting.getToken().trim().length()>0){
-					do{
-						lastIndex = text.indexOf(highlighting.getToken().trim().toUpperCase(), lastIndex+1);
-						if(lastIndex>=0){
-							highlighter.addHighlight(getPreviousEnterIndex(text,lastIndex), getNextEnterIndex(text, lastIndex), new DefaultHighlighter.DefaultHighlightPainter(highlighting.getBackgroundColor()));
-						}
-					}while(lastIndex>=0);
-				}
-			} catch (BadLocationException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	
-	private int getNextEnterIndex(String text, int index) {
-		int nextEnterIndex = text.indexOf("\n", index);
-		if(nextEnterIndex==-1){
-			nextEnterIndex = text.length();
-		}
-		return nextEnterIndex;
+	private void initTable() {
+		table = new JXTable();
+	    table.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+	    //hide columns
+	  	table.setTableHeader(null);
+	  	//hide grid
+	  	table.setShowGrid(false);
+	  	table.setIntercellSpacing(new Dimension(0, 0));
+	    tableModel = new DefaultTableModel(null, new String[]{"text"});
+	    table.setModel(tableModel);
+	    table.setHorizontalScrollEnabled(true);
 	}
 
-	/**
-	 * Returns the index of "\n" previous to index parameter in text
-	 * @param text
-	 * @param index
-	 * @return 
-	 */
-	private int getPreviousEnterIndex(String text, int index) {
-		int previousEnterIndex = -1;
-		int currentIndex = -1;
-		while(currentIndex < index){
-			previousEnterIndex = currentIndex;
-			currentIndex = text.indexOf("\n",currentIndex+1);
-			if(currentIndex==-1){ //There is no enter previous
-				break;
-			}
+	public void processHighlightings(){
+		List<Highlighting> highlightings = parentFrame.getHighlightings();
+		//removes all the previous highlighters
+		for(Highlighter h: table.getHighlighters()){
+			table.removeHighlighter(h);
 		}
-		if(previousEnterIndex==-1){
-			return 0;
+		
+		PatternPredicate patternPredicate = null;
+		ColorHighlighter highlighter = null;
+		List<Highlighter> highlighters = new LinkedList<Highlighter>();
+		for(Highlighting highlighting : highlightings){
+		    patternPredicate = new PatternPredicate(highlighting.getToken());
+		    //TODO set case sensitive and insensitive
+		    //TODO add getForegroundColor to highlightings
+		    highlighter = new ColorHighlighter(patternPredicate, highlighting.getBackgroundColor(), null);
+		    highlighters.add(highlighter);
 		}
-		return previousEnterIndex;
+		//Reverse order to work properly
+		Collections.reverse(highlighters);
+		table.setHighlighters(highlighters.toArray(new Highlighter[0]));
 	}
 
 	public String getPath() {
@@ -108,10 +121,30 @@ public class LogFilePanel extends JPanel implements PropertyChangeListener {
 		return "No log file";
 	}
 
-	public void setLogFile(LogFile logFile) {
+	public synchronized void setLogFile(LogFile logFile) {
 		this.logFile = logFile;
 		logFile.addPropertyChangeListener(this);
-		logText.setText(logFile.getFileContent().toString());
+		loadInitialData(logFile);
+		processHighlightings();
+	}
+
+	private void loadInitialData(LogFile logFile) {
+		removeAllRows();
+		String[] auxStr = new String[1];
+		Iterator<String> it = logFile.getLines().iterator();
+		for(;it.hasNext() ;){
+			auxStr[0] = it.next();
+			tableModel.addRow(auxStr);
+		}
+		table.packAll();
+	}
+	
+	private void removeAllRows(){
+		if (tableModel.getRowCount() > 0) {
+		    for (int i = tableModel.getRowCount() - 1; i > -1; i--) {
+		    	tableModel.removeRow(i);
+		    }
+		}
 	}
 	
 	@Override
@@ -121,13 +154,34 @@ public class LogFilePanel extends JPanel implements PropertyChangeListener {
 
 				@Override
 				public void run() {
-					logText.setText(logFile.getFileContent().toString());
-					logText.updateUI();
-//					processHighlightings(highlightings);
+					//TODO try to add the new lines only
+					removeAllRows();
+					String[] auxStr = new String[1];
+					Iterator<String> it = logFile.getLines().iterator();
+					for(;it.hasNext() ;){
+						auxStr[0] = it.next();
+						tableModel.addRow(auxStr);
+					}
+					table.packAll();
+					//follow Tail
+					if(logFile.isFollowTail()){
+						table.scrollRowToVisible(tableModel.getRowCount()-1);
+					}
 				}
-				
 			});
 		}
 	}
 
+	public void setFollowTail(boolean followTail) {
+		logFile.setFollowTail(followTail);
+		//follow Tail
+		if(followTail){
+			table.scrollRowToVisible(tableModel.getRowCount()-1);
+		}
+	}
+	
+	public boolean isFollowingTail(){
+		return logFile.isFollowTail();
+	}
+	
 }
