@@ -62,8 +62,8 @@ public class FileListener implements Runnable {
 		while (!stop) {
 			//A file changes when his length changes
 			if(file.length()!=lastLength){
+				propertyChangeSupport.firePropertyChange(FILE_WAS_MODIFIED, lastLength, file.length());
 				lastLength = file.length();
-				propertyChangeSupport.firePropertyChange(FILE_WAS_MODIFIED, null, file);
 			}
 			try {
 				//TODO make this value variable
