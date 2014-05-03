@@ -3,6 +3,8 @@ package view;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
@@ -25,6 +27,7 @@ import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.TransferHandler;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -66,6 +69,8 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 		createMenu();
 		createTopPanel();
 		createTabbedPanel();
+		//prepare to open files via drag and drop
+		setDragAndDropFeature();
 	}
 	
 	private void createTabbedPanel() {
@@ -189,14 +194,18 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 	private void chooseLogFile() {
 		int retVal = fileChooser.showOpenDialog(JFollowTailFrame.this);
 		if(retVal == JFileChooser.APPROVE_OPTION){
-			for (File file : fileChooser.getSelectedFiles()) {
-				if(!isAlreadyOpen(file)){
-					openLogFile(file);
-				}else{
-					//selects the already open file
-					int index = getIndexFromFilePath(file.getPath());
-					tabbedPane.setSelectedIndex(index);
-				}
+			openFiles(fileChooser.getSelectedFiles());
+		}
+	}
+
+	private void openFiles(File[] files) {
+		for (File file : files) {
+			if(!isAlreadyOpen(file)){
+				openLogFile(file);
+			}else{
+				//selects the already open file
+				int index = getIndexFromFilePath(file.getPath());
+				tabbedPane.setSelectedIndex(index);
 			}
 		}
 	}
@@ -332,5 +341,42 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 		logFilePanels.get(i).closeLogFile();
 		logFilePanels.remove(i);
 		tabbedPane.remove(i);
+	}
+	
+	private void setDragAndDropFeature() {
+		this.setTransferHandler(new TransferHandler(){
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -6410994042858912735L;
+			@Override
+	        public boolean canImport(TransferHandler.TransferSupport info) {
+	            return true;
+	        }
+
+	        @Override
+	        public boolean importData(TransferHandler.TransferSupport info) {
+	            if (!info.isDrop()) {
+	                return false;
+	            }
+
+	            // Get the fileList that is being dropped.
+	            Transferable t = info.getTransferable();
+	            List<File> data;
+	            try {
+	                data = (List<File>)t.getTransferData(DataFlavor.javaFileListFlavor);
+	            } 
+	            catch (Exception e) { 
+	            	return false; 
+	            }
+	           
+	            //Open Files
+	            openFiles(data.toArray(new File[0]));
+	            
+	            return true;
+	        }
+
+		});
 	}
 }
