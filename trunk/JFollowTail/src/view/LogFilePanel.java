@@ -171,6 +171,9 @@ public class LogFilePanel extends JPanel implements PropertyChangeListener {
 	}
 
 	public void setFollowTail(boolean followTail) {
+		if(logFile == null){
+			return;
+		}
 		logFile.setFollowTail(followTail);
 		//follow Tail
 		if(followTail){
