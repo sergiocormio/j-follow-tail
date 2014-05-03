@@ -11,8 +11,13 @@ public class ResourcesFactory {
 		}
 		
 		//Log icon
-		public static ImageIcon getLogIcon(){
+		public static ImageIcon getActiveLogIcon(){
 			return new ImageIcon(ResourcesFactory.class.getResource("log-icon_16.png"));
+		}
+		
+		//Log icon
+		public static ImageIcon getInactiveLogIcon(){
+			return new ImageIcon(ResourcesFactory.class.getResource("log-icon-gray_16.png"));
 		}
 		
 		//Open icon

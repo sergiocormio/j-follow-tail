@@ -67,7 +67,7 @@ public class FileListener implements Runnable {
 			}
 			try {
 				//TODO make this value variable
-				Thread.sleep(1000);
+				Thread.sleep(250L);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -101,8 +101,7 @@ public class FileListener implements Runnable {
 								.context();
 						if (modifiedPath.endsWith(file.getName())) {
 							// Output
-							propertyChangeSupport.firePropertyChange(
-									FILE_WAS_MODIFIED, null, file);
+							propertyChangeSupport.firePropertyChange(FILE_WAS_MODIFIED, null, file);
 						}
 					}
 				}
@@ -114,8 +113,6 @@ public class FileListener implements Runnable {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("Listener Stopped successfully");
-
 	}
 
 	public synchronized void stop() {
