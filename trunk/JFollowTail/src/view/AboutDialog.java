@@ -60,7 +60,7 @@ public class AboutDialog extends JDialog {
 	private void createMainPanel() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-		panel.setBorder(new EmptyBorder(0, 5, 5, 5));
+		panel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		Font boldFont = new Font("Arial", Font.BOLD,14);
 		Font normalFont = new Font("Courier", Font.PLAIN,12);
 		//Image
