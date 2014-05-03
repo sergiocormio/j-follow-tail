@@ -235,7 +235,8 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		if(LogFilePanel.SCROLL_CHANGED_BY_USER.equals(evt.getPropertyName())){
-			evt.getSource();
+			LogFilePanel logFilePanelChanged = (LogFilePanel)evt.getSource();
+			followTailCheckBox.setSelected(logFilePanelChanged.isFollowingTail());
 		}
 	}
 }
