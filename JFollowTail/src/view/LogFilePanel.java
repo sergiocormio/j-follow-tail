@@ -188,4 +188,8 @@ public class LogFilePanel extends JPanel implements PropertyChangeListener {
 	public void showFindDialog(){
 		SearchFactory.getInstance().showFindInput(LogFilePanel.this, table.getSearchable());
 	}
+	
+	public void closeLogFile(){
+		logFile.stopCurrentFileListener();
+	}
 }

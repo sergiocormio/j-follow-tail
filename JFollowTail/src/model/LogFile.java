@@ -35,7 +35,7 @@ public class LogFile implements PropertyChangeListener {
 		createFileListener();
 	}
 
-	private void stopPreviousFileListener() {
+	public void stopCurrentFileListener() {
 		if(fileListener != null){
 			fileListener.stop();
 		}
@@ -53,7 +53,7 @@ public class LogFile implements PropertyChangeListener {
 
 	private void createFileListener() throws IOException {
 		//Stop previous file listener if exists
-		stopPreviousFileListener();
+		stopCurrentFileListener();
 		fileListener = new FileListener(file);
 		fileListener.addPropertyChangeListener(this);
 	}
