@@ -26,6 +26,8 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import model.LogFile;
 import resources.ResourcesFactory;
@@ -44,7 +46,7 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 	private JTextField pathTextField;
 	private JCheckBox followTailCheckBox;
 	private LinkedList<Highlighting> highlightings;
-	protected LogFilePanel logFilePanel;
+	protected LinkedList<LogFilePanel> logFilePanels;
 	private JTabbedPane tabbedPane;
 	private JButton findButton;
 	
@@ -68,14 +70,22 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 	
 	private void createLogFilePanel() {
 		tabbedPane = new JTabbedPane();
-		logFilePanel = new LogFilePanel(this);
-		logFilePanel.addPropertyChangeListener(this);
-		tabbedPane.addTab(logFilePanel.getFileName(),ResourcesFactory.getLogIcon(), logFilePanel, logFilePanel.getPath());
+		tabbedPane.addChangeListener(new ChangeListener() {
+			
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				changeTabSelected();
+			}
+		});
+		
+		logFilePanels = new LinkedList<LogFilePanel>();
 		this.add(tabbedPane,BorderLayout.CENTER);
 	}
 
 	private void createTopPanel() {
 		fileChooser = new JFileChooser();
+		fileChooser.setFileHidingEnabled(true);
+		fileChooser.setMultiSelectionEnabled(true);
 		JPanel topPanel = new JPanel();
 		topPanel.setLayout(new BorderLayout());
 		topPanel.setBorder(new EmptyBorder(2, 0, 2, 2));
@@ -108,12 +118,14 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 					@Override
 					public void propertyChange(PropertyChangeEvent evt) {
 						if(evt.getPropertyName().equals(HighlightingsDialog.LIST_CHANGED_EVENT)){
-							JFollowTailFrame.this.logFilePanel.processHighlightings();
+							getCurrentLogFilePanel().processHighlightings();
 						}
 					}
 				});
 				highlightingsDialog.setVisible(true);
-				JFollowTailFrame.this.logFilePanel.processHighlightings();
+				for(LogFilePanel logFilePanel : logFilePanels){
+					logFilePanel.processHighlightings();
+				}
 			}
 		});
 		
@@ -136,7 +148,9 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				logFilePanel.setFollowTail(followTailCheckBox.isSelected());
+				if(getCurrentLogFilePanel()!=null){
+					getCurrentLogFilePanel().setFollowTail(followTailCheckBox.isSelected());
+				}
 			}
 		});
 		topLeftPanel.add(followTailCheckBox);
@@ -151,8 +165,9 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 	}
 	
 	protected LogFilePanel getCurrentLogFilePanel() {
-		//TODO It could have more than one logFilePanels
-		return logFilePanel;
+		//It could have more than one logFilePanels
+		int tabIndex = tabbedPane.getSelectedIndex();
+		return logFilePanels.get(tabIndex);
 	}
 
 	/**
@@ -166,20 +181,61 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 	private void chooseLogFile() {
 		int retVal = fileChooser.showOpenDialog(JFollowTailFrame.this);
 		if(retVal == JFileChooser.APPROVE_OPTION){
-			openLogFile(fileChooser.getSelectedFile());
+			for (File file : fileChooser.getSelectedFiles()) {
+				if(!isAlreadyOpen(file)){
+					openLogFile(file);
+				}else{
+					//selects the already open file
+					int index = getIndexFromFilePath(file.getPath());
+					tabbedPane.setSelectedIndex(index);
+				}
+			}
 		}
 	}
 	
+	private boolean isAlreadyOpen(File file) {
+		for(LogFilePanel logFilePanel : logFilePanels){
+			if(file.getPath().equalsIgnoreCase(logFilePanel.getPath())){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private int getIndexFromFilePath(String path) {
+		LogFilePanel logFilePanel = null;
+		for(int i = 0; i<logFilePanels.size(); i++){
+			logFilePanel = logFilePanels.get(i);
+			if(path.equalsIgnoreCase(logFilePanel.getPath())){
+				return i;
+			}
+		}
+		return -1;
+	}
+
 	private void openLogFile(File file){
 		try{
+			LogFilePanel logFilePanel = new LogFilePanel(this);
+			logFilePanel.addPropertyChangeListener(this);
+			logFilePanels.add(logFilePanel);
 			LogFile logFile = new LogFile(file);
 			logFilePanel.setLogFile(logFile);
-			this.setTitle(file.getName() + " - " + APP_TITLE);
-			pathTextField.setText(file.getPath());
+			tabbedPane.addTab(logFilePanel.getFileName(),ResourcesFactory.getLogIcon(), logFilePanel, logFilePanel.getPath());
+			tabbedPane.setSelectedIndex(logFilePanels.size()-1);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(JFollowTailFrame.this, "Error loading log file: " + (file!=null?file.getName():""), "Error in log File", JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
 		}
+	}
+	
+	private void changeTabSelected(){
+		LogFilePanel currentLogFilePanel = getCurrentLogFilePanel();
+		if(currentLogFilePanel==null){
+			return;
+		}
+		this.setTitle(currentLogFilePanel.getFileName() + " - " + APP_TITLE);
+		pathTextField.setText(currentLogFilePanel.getPath());
+		followTailCheckBox.setSelected(currentLogFilePanel.isFollowingTail());
 	}
 
 	private void createMenu() {
@@ -254,7 +310,9 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 	public void propertyChange(PropertyChangeEvent evt) {
 		if(LogFilePanel.SCROLL_CHANGED_BY_USER.equals(evt.getPropertyName())){
 			LogFilePanel logFilePanelChanged = (LogFilePanel)evt.getSource();
-			followTailCheckBox.setSelected(logFilePanelChanged.isFollowingTail());
+			if(logFilePanelChanged == getCurrentLogFilePanel()){
+				followTailCheckBox.setSelected(logFilePanelChanged.isFollowingTail());
+			}
 		}
 	}
 }
