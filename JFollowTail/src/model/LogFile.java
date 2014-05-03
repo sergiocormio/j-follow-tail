@@ -6,6 +6,7 @@ import java.beans.PropertyChangeSupport;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,14 +43,71 @@ public class LogFile implements PropertyChangeListener {
 	}
 
 	private synchronized void loadFile() throws IOException {
+		try{
+			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
+			byte fileContentAsBytes[] = new byte[(int)file.length()];
+			bis.read(fileContentAsBytes);
+			bis.close();
+			//load lines
+			lines.clear();
+			lines.addAll(Arrays.asList(new String(fileContentAsBytes).split("\n")));
+			//add the last enter if exist
+			addLastEnter(fileContentAsBytes);
+		}catch(FileNotFoundException e){
+			//file was deleted or renamed
+			//load lines
+			lines.clear();
+		}
+	}
+
+	private void addLastEnter(byte[] fileContentAsBytes) {
+		if(fileContentAsBytes.length > 0){
+			byte[] lastByte = new byte[]{fileContentAsBytes[fileContentAsBytes.length-1]};
+			String lastChar = new String(lastByte);
+			//last char is enter...
+			if("\n".equals(lastChar)){
+				lines.add("");
+			}
+		}
+	}
+	
+	private synchronized void loadUpdatesFromFile(int oldLength, int newLength) throws IOException {
+		int bytesToRead = newLength - oldLength;
+		//special case, the file is smaller than before
+		if(newLength < oldLength){
+			loadFile();
+			return;
+		}
 		BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
-		byte fileContentAsBytes[] = new byte[(int)file.length()];
+		byte fileContentAsBytes[] = new byte[bytesToRead];
+		//skips old length
+		bis.skip(oldLength);
 		bis.read(fileContentAsBytes);
 		bis.close();
-		//load lines
-		lines.clear();
-		lines.addAll(Arrays.asList(new String(fileContentAsBytes).split("\n")));
+		//get lastLine
+		String lastLine = "";
+		if(lines.size()>0){
+			lastLine = lines.get(lines.size()-1);
+		}
+		//add new lines
+		String[] newLines = new String(fileContentAsBytes).split("\n");
+		
+		//updates lastLine
+		lastLine = lastLine.concat(newLines[0]);
+		if(lines.size()>0){
+			lines.set(lines.size()-1, lastLine);
+		}else{
+			lines.add(lastLine);
+		}
+		
+		//add the rest of the new lines
+		for(int i=1 ; i<newLines.length ; i++){
+			lines.add(newLines[i]);
+		}
+		addLastEnter(fileContentAsBytes);
+		
 	}
+	
 
 	private void createFileListener() throws IOException {
 		//Stop previous file listener if exists
@@ -84,9 +142,11 @@ public class LogFile implements PropertyChangeListener {
 	public void propertyChange(PropertyChangeEvent evt) {
 		if(FileListener.FILE_WAS_MODIFIED.equals(evt.getPropertyName())){
 			try {
-				//TODO Try to avoid loading all the file again
 //				System.out.println("File was modified");
-				loadFile();
+				//Read only the updates
+				long lastLength = (Long)evt.getOldValue();
+				long newLength = (Long)evt.getNewValue();
+				loadUpdatesFromFile((int)lastLength,(int) newLength);
 				propertyChangeSupport.firePropertyChange(LOG_FILE_CHANGED, null, this);
 			} catch (IOException e) {
 				e.printStackTrace();
