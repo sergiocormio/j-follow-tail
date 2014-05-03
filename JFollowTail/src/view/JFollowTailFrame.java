@@ -46,6 +46,7 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 	private LinkedList<Highlighting> highlightings;
 	protected LogFilePanel logFilePanel;
 	private JTabbedPane tabbedPane;
+	private JButton findButton;
 	
 	public JFollowTailFrame() throws IOException{
 		loadHighlightings();
@@ -117,7 +118,19 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 		});
 		
 		topLeftPanel.add(adminHighlightingButton);
+		//Find or search button
+		findButton = new JButton("Find",ResourcesFactory.getFindIcon());
+		findButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				LogFilePanel currentPanel = getCurrentLogFilePanel();
+				currentPanel.showFindDialog();
+			}
+		});
+		topLeftPanel.add(findButton);
 		
+		//Follow Tail
 		followTailCheckBox = new JCheckBox("Follow Tail");
 		followTailCheckBox.addActionListener(new ActionListener() {
 			
@@ -137,6 +150,11 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 		
 	}
 	
+	protected LogFilePanel getCurrentLogFilePanel() {
+		//TODO It could have more than one logFilePanels
+		return logFilePanel;
+	}
+
 	/**
 	 * creates and load the highlightings
 	 */
