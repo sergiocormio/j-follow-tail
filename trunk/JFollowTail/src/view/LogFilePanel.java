@@ -56,10 +56,6 @@ public class LogFilePanel extends JPanel implements PropertyChangeListener {
 				}
 				boolean oldValue = logFile.isFollowTail();
 				//if reaches the maximum of scroll -> set follow Tail
-				//TODO: Complete this
-				System.out.println("e.getValue(): " + e.getValue());
-				System.out.println("viewLogScrollPane.getVerticalScrollBar().getVisibleAmount(): " + viewLogScrollPane.getVerticalScrollBar().getVisibleAmount());
-				System.out.println("e.getAdjustable().getMaximum(): " + e.getAdjustable().getMaximum());
 				if(e.getValue() == e.getAdjustable().getMaximum()-viewLogScrollPane.getVerticalScrollBar().getVisibleAmount()){
 					logFile.setFollowTail(true);
 				}else{
