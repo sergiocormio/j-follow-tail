@@ -24,6 +24,7 @@ import org.jdesktop.swingx.JXTable;
 import org.jdesktop.swingx.decorator.ColorHighlighter;
 import org.jdesktop.swingx.decorator.Highlighter;
 import org.jdesktop.swingx.decorator.PatternPredicate;
+import org.jdesktop.swingx.search.SearchFactory;
 
 import view.highlightings.Highlighting;
 
@@ -163,6 +164,7 @@ public class LogFilePanel extends JPanel implements PropertyChangeListener {
 					if(logFile.isFollowTail()){
 						table.scrollRowToVisible(tableModel.getRowCount()-1);
 					}
+					
 				}
 			});
 		}
@@ -180,4 +182,7 @@ public class LogFilePanel extends JPanel implements PropertyChangeListener {
 		return logFile.isFollowTail();
 	}
 	
+	public void showFindDialog(){
+		SearchFactory.getInstance().showFindInput(LogFilePanel.this, table.getSearchable());
+	}
 }

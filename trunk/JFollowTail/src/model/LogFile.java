@@ -85,7 +85,7 @@ public class LogFile implements PropertyChangeListener {
 		if(FileListener.FILE_WAS_MODIFIED.equals(evt.getPropertyName())){
 			try {
 				//TODO Try to avoid loading all the file again
-				System.out.println("File was modified");
+//				System.out.println("File was modified");
 				loadFile();
 				propertyChangeSupport.firePropertyChange(LOG_FILE_CHANGED, null, this);
 			} catch (IOException e) {
