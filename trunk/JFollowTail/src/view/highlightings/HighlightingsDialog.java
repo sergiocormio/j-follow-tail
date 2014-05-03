@@ -47,9 +47,9 @@ public class HighlightingsDialog extends JDialog {
 	private JTable highlightingsTable;
 	private LinkedList<Highlighting> highlightings;
 	private JTextField tokenTextfield;
-	private JComboBox colorComboBox;
+	private JComboBox backgroundColorComboBox,foregroundColorComboBox;
 	private JPanel dialogPanel;
-	private ColorItem customColorItem;
+	private ColorItem customBackgroundColorItem, customForegroundColorItem;
 
 	public HighlightingsDialog(JFrame owner,
 			LinkedList<Highlighting> highlightings) {
@@ -121,6 +121,8 @@ public class HighlightingsDialog extends JDialog {
 		individualPanel.add(Box.createRigidArea(new Dimension(0,5)));
 		addBackgroundColorItem(individualPanel);
 		individualPanel.add(Box.createRigidArea(new Dimension(0,5)));
+		addForegroundColorItem(individualPanel);
+		individualPanel.add(Box.createRigidArea(new Dimension(0,5)));
 		addStringItem(individualPanel);
 		individualPanel.add(Box.createRigidArea(new Dimension(0,5)));
 		mainPanel.add(individualPanel, BorderLayout.CENTER);
@@ -164,19 +166,19 @@ public class HighlightingsDialog extends JDialog {
 		bgColorPanel.add(new JLabel("Background Color:"),BorderLayout.WEST);
 		//COMBO BOX
 		List<ColorItem> elements = new ArrayList<ColorItem>();
-		customColorItem = new ColorItem(Color.decode("#00FFCC"), "Custom");
-		elements.add(customColorItem);
+		customBackgroundColorItem = new ColorItem(Color.decode("#00FFCC"), "Custom");
+		elements.add(customBackgroundColorItem);
 		elements.addAll(ColorItem.getDefaultColorItems());
-		colorComboBox = new JComboBox(elements.toArray(new ColorItem[elements.size()]));
-		colorComboBox.setRenderer(new ColorItemComboRenderer());
-		colorComboBox.addActionListener(new ActionListener() {
+		backgroundColorComboBox = new JComboBox(elements.toArray(new ColorItem[elements.size()]));
+		backgroundColorComboBox.setRenderer(new ColorItemComboRenderer());
+		backgroundColorComboBox.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				setSelectedColorToHighlighting();
+				setBackgroundSelectedColorToHighlighting();
 			}
 		});
-		bgColorPanel.add(colorComboBox,BorderLayout.CENTER);
+		bgColorPanel.add(backgroundColorComboBox,BorderLayout.CENTER);
 		//Select Custom Color button
 		JButton selectCustomColorButton = new JButton(ResourcesFactory.getColorEditIcon());
 		selectCustomColorButton.setToolTipText("Click to select Custom Color");
@@ -185,15 +187,15 @@ public class HighlightingsDialog extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				Color initialColor = Color.red;
-				if(colorComboBox.getSelectedItem() != null){
-					ColorItem colorItemSelected = (ColorItem) colorComboBox.getSelectedItem();
+				if(backgroundColorComboBox.getSelectedItem() != null){
+					ColorItem colorItemSelected = (ColorItem) backgroundColorComboBox.getSelectedItem();
 					initialColor = colorItemSelected.getColor();
 				}
 				Color newColor = JColorChooser.showDialog(HighlightingsDialog.this,"Choose Custom Color",initialColor);
 				if (newColor != null) {
-					customColorItem.setColor(newColor);
-					colorComboBox.setSelectedIndex(0);
-					colorComboBox.updateUI();
+					customBackgroundColorItem.setColor(newColor);
+					backgroundColorComboBox.setSelectedIndex(0);
+					backgroundColorComboBox.updateUI();
 				}
 			}
 			
@@ -201,17 +203,76 @@ public class HighlightingsDialog extends JDialog {
 		bgColorPanel.add(selectCustomColorButton,BorderLayout.EAST);
 		individualPanel.add(bgColorPanel);
 	}
+	
+	private void addForegroundColorItem(JPanel individualPanel) {
+		JPanel fgColorPanel = new JPanel(new BorderLayout(5,5));
+		fgColorPanel.add(new JLabel("Foreground Color:"),BorderLayout.WEST);
+		//COMBO BOX
+		List<ColorItem> elements = new ArrayList<ColorItem>();
+		customForegroundColorItem = new ColorItem(Color.decode("#333333"), "Custom");
+		elements.add(customForegroundColorItem);
+		elements.addAll(ColorItem.getDefaultColorItems());
+		foregroundColorComboBox = new JComboBox(elements.toArray(new ColorItem[elements.size()]));
+		foregroundColorComboBox.setRenderer(new ColorItemComboRenderer());
+		foregroundColorComboBox.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				setForegroundSelectedColorToHighlighting();
+			}
+		});
+		fgColorPanel.add(foregroundColorComboBox,BorderLayout.CENTER);
+		//Select Custom Color button
+		JButton selectCustomColorButton = new JButton(ResourcesFactory.getColorEditIcon());
+		selectCustomColorButton.setToolTipText("Click to select Custom Color");
+		selectCustomColorButton.addActionListener(new ActionListener(){
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Color initialColor = Color.red;
+				if(foregroundColorComboBox.getSelectedItem() != null){
+					ColorItem colorItemSelected = (ColorItem) foregroundColorComboBox.getSelectedItem();
+					initialColor = colorItemSelected.getColor();
+				}
+				Color newColor = JColorChooser.showDialog(HighlightingsDialog.this,"Choose Custom Color",initialColor);
+				if (newColor != null) {
+					customForegroundColorItem.setColor(newColor);
+					foregroundColorComboBox.setSelectedIndex(0);
+					foregroundColorComboBox.updateUI();
+				}
+			}
+			
+		});
+		fgColorPanel.add(selectCustomColorButton,BorderLayout.EAST);
+		individualPanel.add(fgColorPanel);
+	}
 
-	protected void setSelectedColorToHighlighting() {
-		if(colorComboBox.getSelectedItem() == null){
+	protected void setBackgroundSelectedColorToHighlighting() {
+		if(backgroundColorComboBox.getSelectedItem() == null){
 			return;
 		}
 		Highlighting selectedHighlighting = getSelectedHighlighting();
 		if(selectedHighlighting == null){
 			return;
 		}
-		ColorItem colorItemSelected = (ColorItem) colorComboBox.getSelectedItem();
+		ColorItem colorItemSelected = (ColorItem) backgroundColorComboBox.getSelectedItem();
 		selectedHighlighting.setBackgroundColor(colorItemSelected.getColor());
+		int selectedRow = highlightingsTable.getSelectedRow();
+		reloadTableData();
+		highlightingsTable.setRowSelectionInterval(selectedRow, selectedRow);
+		firePropertyChange(LIST_CHANGED_EVENT, null, null);
+	}
+	
+	protected void setForegroundSelectedColorToHighlighting() {
+		if(foregroundColorComboBox.getSelectedItem() == null){
+			return;
+		}
+		Highlighting selectedHighlighting = getSelectedHighlighting();
+		if(selectedHighlighting == null){
+			return;
+		}
+		ColorItem colorItemSelected = (ColorItem) foregroundColorComboBox.getSelectedItem();
+		selectedHighlighting.setForegroundColor(colorItemSelected.getColor());
 		int selectedRow = highlightingsTable.getSelectedRow();
 		reloadTableData();
 		highlightingsTable.setRowSelectionInterval(selectedRow, selectedRow);
@@ -274,8 +335,9 @@ public class HighlightingsDialog extends JDialog {
 	
 	protected void addNewHighlighting() {
 		int position = highlightingsTable.getSelectedRow() + 1;
-		ColorItem colorItemSelected = (ColorItem) colorComboBox.getSelectedItem();
-		Highlighting newHighlighting = new Highlighting(tokenTextfield.getText(), colorItemSelected.getColor());
+		ColorItem bgColorItemSelected = (ColorItem) backgroundColorComboBox.getSelectedItem();
+		ColorItem fgColorItemSelected = (ColorItem) foregroundColorComboBox.getSelectedItem();
+		Highlighting newHighlighting = new Highlighting(tokenTextfield.getText(), bgColorItemSelected.getColor(), fgColorItemSelected.getColor());
 		highlightings.add(position, newHighlighting);
 		reloadTableData();
 		highlightingsTable.setRowSelectionInterval(position, position);
@@ -399,14 +461,25 @@ public class HighlightingsDialog extends JDialog {
 			return;
 		}
 		tokenTextfield.setText(selectedHighlighting.getToken());
-		colorComboBox.setSelectedItem(new ColorItem(selectedHighlighting.getBackgroundColor(),""));
+		backgroundColorComboBox.setSelectedItem(new ColorItem(selectedHighlighting.getBackgroundColor(),""));
 		//if backgroundcolor there was not in comboBox, change "Custom" color
-		if(colorComboBox.getSelectedItem() != null){
-			ColorItem colorItemSelected = (ColorItem) colorComboBox.getSelectedItem();
+		if(backgroundColorComboBox.getSelectedItem() != null){
+			ColorItem colorItemSelected = (ColorItem) backgroundColorComboBox.getSelectedItem();
 			if(!colorItemSelected.getColor().equals(selectedHighlighting.getBackgroundColor())){
-				customColorItem.setColor(selectedHighlighting.getBackgroundColor());
-				colorComboBox.setSelectedIndex(0);
-				colorComboBox.updateUI();
+				customBackgroundColorItem.setColor(selectedHighlighting.getBackgroundColor());
+				backgroundColorComboBox.setSelectedIndex(0);
+				backgroundColorComboBox.updateUI();
+			}
+		}
+		
+		foregroundColorComboBox.setSelectedItem(new ColorItem(selectedHighlighting.getForegroundColor(),""));
+		//if foregroundColor there was not in comboBox, change "Custom" color
+		if(foregroundColorComboBox.getSelectedItem() != null){
+			ColorItem colorItemSelected = (ColorItem) foregroundColorComboBox.getSelectedItem();
+			if(!colorItemSelected.getColor().equals(selectedHighlighting.getForegroundColor())){
+				customForegroundColorItem.setColor(selectedHighlighting.getForegroundColor());
+				foregroundColorComboBox.setSelectedIndex(0);
+				foregroundColorComboBox.updateUI();
 			}
 		}
 	}
@@ -429,6 +502,11 @@ public class HighlightingsDialog extends JDialog {
 		return data;
 	}
 
+	/**
+	 * Renderer of the first column of the table
+	 * @author Sergio Cormio
+	 *
+	 */
 	private class ColorRenderer extends JLabel implements TableCellRenderer {
 		/**
 		 * 
@@ -445,8 +523,8 @@ public class HighlightingsDialog extends JDialog {
 				Object data, boolean isSelected, boolean hasFocus, int row,
 				int column) {
 			Highlighting highlighting = (Highlighting) data;
-			Color newColor = highlighting.getBackgroundColor();
-			setBackground(newColor);
+			setBackground(highlighting.getBackgroundColor());
+			setForeground(highlighting.getForegroundColor());
 			setText(highlighting.getToken());
 			// unbold
 			Font f = getFont();

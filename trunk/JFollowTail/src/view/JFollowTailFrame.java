@@ -118,7 +118,9 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 					@Override
 					public void propertyChange(PropertyChangeEvent evt) {
 						if(evt.getPropertyName().equals(HighlightingsDialog.LIST_CHANGED_EVENT)){
-							getCurrentLogFilePanel().processHighlightings();
+							if(getCurrentLogFilePanel()!=null){
+								getCurrentLogFilePanel().processHighlightings();
+							}
 						}
 					}
 				});

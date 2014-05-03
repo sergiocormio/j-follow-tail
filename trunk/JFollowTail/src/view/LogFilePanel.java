@@ -95,8 +95,7 @@ public class LogFilePanel extends JPanel implements PropertyChangeListener {
 		for(Highlighting highlighting : highlightings){
 		    patternPredicate = new PatternPredicate(highlighting.getToken());
 		    //TODO set case sensitive and insensitive
-		    //TODO add getForegroundColor to highlightings
-		    highlighter = new ColorHighlighter(patternPredicate, highlighting.getBackgroundColor(), null);
+		    highlighter = new ColorHighlighter(patternPredicate, highlighting.getBackgroundColor(), highlighting.getForegroundColor());
 		    highlighters.add(highlighter);
 		}
 		//Reverse order to work properly
