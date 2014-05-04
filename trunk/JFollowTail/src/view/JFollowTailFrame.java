@@ -309,20 +309,6 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 		
 	}
 	
-	public static void main(String[] args) {
-		SwingUtilities.invokeLater(new Runnable() {
-			
-			@Override
-			public void run() {
-				try {
-					new JFollowTailFrame().setVisible(true);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-
 	public List<Highlighting> getHighlightings() {
 		return highlightings;
 	}
@@ -377,6 +363,20 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 	            return true;
 	        }
 
+		});
+	}
+	
+	public static void main(String[] args) {
+		SwingUtilities.invokeLater(new Runnable() {
+			
+			@Override
+			public void run() {
+				try {
+					new JFollowTailFrame().setVisible(true);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		});
 	}
 }

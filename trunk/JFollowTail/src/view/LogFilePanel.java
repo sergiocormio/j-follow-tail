@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -93,8 +94,8 @@ public class LogFilePanel extends JPanel implements PropertyChangeListener {
 		ColorHighlighter highlighter = null;
 		List<Highlighter> highlighters = new LinkedList<Highlighter>();
 		for(Highlighting highlighting : highlightings){
-		    patternPredicate = new PatternPredicate(highlighting.getToken());
-		    //TODO set case sensitive and insensitive
+			//TODO set case sensitive and insensitive (now it's only case insensitive)
+		    patternPredicate = new PatternPredicate(Pattern.compile(highlighting.getToken(),Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
 		    highlighter = new ColorHighlighter(patternPredicate, highlighting.getBackgroundColor(), highlighting.getForegroundColor());
 		    highlighters.add(highlighter);
 		}
