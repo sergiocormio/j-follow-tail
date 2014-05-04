@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.prefs.Preferences;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -27,6 +28,7 @@ import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.TransferHandler;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
@@ -45,6 +47,7 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 	 * 
 	 */
 	private static final long serialVersionUID = -5891671256906504322L;
+	protected static final String LAST_PATH_USED = "LAST_PATH_USED";
 	private JFileChooser fileChooser;
 	private JTextField pathTextField;
 	private JCheckBox followTailCheckBox;
@@ -52,8 +55,13 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 	protected LinkedList<LogFilePanel> logFilePanels;
 	private JTabbedPane tabbedPane;
 	private JButton findButton;
+	private Preferences preferences;
+	private BusyDialog busyDialog;
+	private JButton openButton;
 	
 	public JFollowTailFrame() throws IOException{
+		//User preferences
+		preferences = Preferences.userRoot().node(this.getClass().getName());
 		loadHighlightings();
 		createUI();
 		pack();
@@ -91,6 +99,10 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 		fileChooser = new JFileChooser();
 		fileChooser.setFileHidingEnabled(true);
 		fileChooser.setMultiSelectionEnabled(true);
+		String lastPathUsed = preferences.get(LAST_PATH_USED,null);
+		if(lastPathUsed!=null){
+			fileChooser.setCurrentDirectory(new File(lastPathUsed));
+		}
 		JPanel topPanel = new JPanel();
 		topPanel.setLayout(new BorderLayout());
 		topPanel.setBorder(new EmptyBorder(2, 0, 2, 2));
@@ -99,7 +111,7 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 		topLeftPanel.setLayout(new FlowLayout(FlowLayout.CENTER,5,0));
 		
 		//Open Button
-		final JButton openButton = new JButton("Open Log File",ResourcesFactory.getOpenIcon());
+		openButton = new JButton("Open Log File",ResourcesFactory.getOpenIcon());
 		
 		openButton.addActionListener(new ActionListener() {
 
@@ -198,16 +210,42 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 		}
 	}
 
-	private void openFiles(File[] files) {
-		for (File file : files) {
-			if(!isAlreadyOpen(file)){
-				openLogFile(file);
-			}else{
-				//selects the already open file
-				int index = getIndexFromFilePath(file.getPath());
-				tabbedPane.setSelectedIndex(index);
+	private void openFiles(final File[] files) {
+		openButton.setEnabled(false);
+		SwingWorker<Void, String> worker = new SwingWorker<Void, String>(){
+
+			@Override
+			protected Void doInBackground() throws Exception {
+				for (File file : files) {
+					publish(file.getName());
+					if(!isAlreadyOpen(file)){
+						openLogFile(file);
+					}else{
+						//selects the already open file
+						int index = getIndexFromFilePath(file.getPath());
+						tabbedPane.setSelectedIndex(index);
+					}
+					//saves last file used in user preferences
+					preferences.put(LAST_PATH_USED, file.getAbsolutePath());
+				}
+				return null;
 			}
-		}
+			
+			@Override
+			protected void done() {
+				busyDialog.setVisible(false);
+				openButton.setEnabled(true);
+			}
+			
+			@Override
+			protected void process(List<String> chunks) {
+				busyDialog.setText("Loading: " + chunks.get(chunks.size()-1));
+				busyDialog.setLocationRelativeTo(JFollowTailFrame.this);
+			}
+			
+		};
+		busyDialog = BusyDialog.showBusyDialog(JFollowTailFrame.this, "Loading...", worker);
+		
 	}
 	
 	private boolean isAlreadyOpen(File file) {
