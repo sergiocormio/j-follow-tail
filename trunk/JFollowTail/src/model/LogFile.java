@@ -50,7 +50,8 @@ public class LogFile implements PropertyChangeListener {
 			bis.close();
 			//load lines
 			lines.clear();
-			lines.addAll(Arrays.asList(new String(fileContentAsBytes).split("\n")));
+			//TODO Charset should be configurable
+			lines.addAll(Arrays.asList(new String(fileContentAsBytes,"ISO-8859-1").split("\n")));
 			//add the last enter if exist
 			addLastEnter(fileContentAsBytes);
 		}catch(FileNotFoundException e){
