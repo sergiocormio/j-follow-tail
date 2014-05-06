@@ -210,7 +210,7 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 		}
 	}
 
-	private void openFiles(final File[] files) {
+	public void openFiles(final File[] files) {
 		openButton.setEnabled(false);
 		SwingWorker<Void, String> worker = new SwingWorker<Void, String>(){
 
@@ -404,13 +404,23 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 		});
 	}
 	
-	public static void main(String[] args) {
+	public static void main(final String[] args) {
 		SwingUtilities.invokeLater(new Runnable() {
 			
 			@Override
 			public void run() {
 				try {
-					new JFollowTailFrame().setVisible(true);
+					JFollowTailFrame frame = new JFollowTailFrame();
+					frame.setVisible(true);
+					
+					//Open files passed as parameters
+					if(args.length > 0){
+						File[] files = new File[args.length];
+						for(int i=0; i<args.length ; i++){
+							files[0] = new File(args[i]);
+						}
+						frame.openFiles(files);
+					}
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
