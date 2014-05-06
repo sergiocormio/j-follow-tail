@@ -9,10 +9,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class LogFile implements PropertyChangeListener {
+	private static final String TAB_IN_SPACES = "        ";
 	public static final String LOG_FILE_CHANGED = "Log File Changed";
 	private File file;
 	private boolean followTail = false;
@@ -51,14 +51,23 @@ public class LogFile implements PropertyChangeListener {
 			//load lines
 			lines.clear();
 			//TODO Charset should be configurable
-			lines.addAll(Arrays.asList(new String(fileContentAsBytes,"ISO-8859-1").split("\n")));
+			String[] newLines= new String(fileContentAsBytes,"ISO-8859-1").split("\n");
+			//add the rest of the new lines
+			for(int i=0 ; i<newLines.length ; i++){
+				lines.add(processLine(newLines[i]));
+			}
 			//add the last enter if exist
 			addLastEnter(fileContentAsBytes);
 		}catch(FileNotFoundException e){
 			//file was deleted or renamed
-			//load lines
+			//clear lines
 			lines.clear();
 		}
+	}
+	
+	private String processLine(String line){
+		//replaces tabs by spaces
+		return line.replaceAll("\t", TAB_IN_SPACES);
 	}
 
 	private void addLastEnter(byte[] fileContentAsBytes) {
@@ -91,10 +100,15 @@ public class LogFile implements PropertyChangeListener {
 			lastLine = lines.get(lines.size()-1);
 		}
 		//add new lines
-		String[] newLines = new String(fileContentAsBytes).split("\n");
+		String[] newLines = new String(fileContentAsBytes,"ISO-8859-1").split("\n");
+		
+		if(newLines.length==0){
+			return;
+		}
 		
 		//updates lastLine
 		lastLine = lastLine.concat(newLines[0]);
+		lastLine = processLine(lastLine);
 		if(lines.size()>0){
 			lines.set(lines.size()-1, lastLine);
 		}else{
@@ -103,7 +117,7 @@ public class LogFile implements PropertyChangeListener {
 		
 		//add the rest of the new lines
 		for(int i=1 ; i<newLines.length ; i++){
-			lines.add(newLines[i]);
+			lines.add(processLine(newLines[i]));
 		}
 		addLastEnter(fileContentAsBytes);
 		
