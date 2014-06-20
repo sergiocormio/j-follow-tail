@@ -10,6 +10,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -36,8 +37,9 @@ public class TabCustomTitle extends JPanel implements PropertyChangeListener, Ch
 	}
 
 	private void createUI() {
-		setLayout(new FlowLayout(FlowLayout.CENTER,4,1));
-		setBorder(null);
+		setLayout(new FlowLayout(FlowLayout.CENTER,4,0));
+		//align correctly the button with a general border
+		setBorder(new EmptyBorder(2, 0, 0, 0));
 		setOpaque(false);
 		iconLabel = new JLabel(ResourcesFactory.getInactiveLogIcon());
 		add(iconLabel);
@@ -53,6 +55,7 @@ public class TabCustomTitle extends JPanel implements PropertyChangeListener, Ch
 				}
 			}
 		});
+		closeButton.setOpaque(false);
 		add(closeButton);
 	}
 

@@ -52,11 +52,12 @@ public class TabCloseButton extends JButton{
 			g2.translate(1, 1);
 		}
 		g2.setStroke(new BasicStroke(2));
-		g2.setColor(Color.BLACK);
+		g2.setColor(Color.DARK_GRAY);
 		if (getModel().isRollover()) {
-			g2.setColor(Color.RED);
+			g2.setColor(Color.RED.darker());
 		}
-		int delta = 6;
+		//Draws a cross
+		int delta = 6; //space between the cross and the border
 		g2.drawLine(delta, delta, getWidth() - delta - 1, getHeight() - delta - 1);
 		g2.drawLine(getWidth() - delta - 1, delta, delta, getHeight() - delta - 1);
 		g2.dispose();
