@@ -7,10 +7,13 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.prefs.Preferences;
@@ -42,12 +45,15 @@ import view.highlightings.HighlightingsDialog;
 
 public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 
+	private static final String INVALID_FILE_PATH = "<invalid>";
 	private static final String APP_TITLE = "JFollowTail";
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -5891671256906504322L;
 	protected static final String LAST_PATH_USED = "LAST_PATH_USED";
+	protected static final String QUANTITY_OF_LAST_USED_FILES = "QUANTITY_OF_LAST_USED_FILES";
+	protected static final String LAST_USED_FILE_PREXIX = "LAST_USED_FILE_";
 	private JFileChooser fileChooser;
 	private JTextField pathTextField;
 	private JCheckBox followTailCheckBox;
@@ -66,6 +72,7 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 		createUI();
 		pack();
 		this.setLocationRelativeTo(null);
+		loadLastOpenedFiles();
 	}
 
 	private void createUI() {
@@ -73,7 +80,41 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 		setIconImage(ResourcesFactory.getAppIcon().getImage());
 		setLayout(new BorderLayout(0,0));
 		setPreferredSize(new Dimension(800, 600));
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		this.addWindowListener(new WindowListener() {
+			
+			@Override
+			public void windowOpened(WindowEvent e) {
+			}
+			
+			@Override
+			public void windowIconified(WindowEvent e) {
+			}
+			
+			@Override
+			public void windowDeiconified(WindowEvent e) {
+			}
+			
+			@Override
+			public void windowDeactivated(WindowEvent e) {
+			}
+			
+			@Override
+			public void windowClosing(WindowEvent e) {
+				saveLastOpenedFiles();
+			}
+			
+			@Override
+			public void windowClosed(WindowEvent e) {
+				System.exit(0);
+			}
+			
+			@Override
+			public void windowActivated(WindowEvent e) {
+			}
+		});
+		
+		
 		createMenu();
 		createTopPanel();
 		createTabbedPanel();
@@ -402,6 +443,44 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 	        }
 
 		});
+	}
+	
+	//Tries to load the last opened Files
+	private void loadLastOpenedFiles() {
+		try{
+			int filesUsedQuantity = preferences.getInt(QUANTITY_OF_LAST_USED_FILES,0);
+			String filePath = null;
+			List<File> filesList = new ArrayList<File>();
+			for(int i = 0 ; i < filesUsedQuantity ; i++){
+				filePath = preferences.get(LAST_USED_FILE_PREXIX+i, INVALID_FILE_PATH);
+				if(filePath != INVALID_FILE_PATH){
+					filesList.add(new File(filePath));
+				}
+			}
+			if(filesList.size() > 0){
+				openFiles(filesList.toArray(new File[filesList.size()]));
+			}
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	
+	//Tries to load the last opened Files
+	private void saveLastOpenedFiles() {
+		try{
+			int filesUsedQuantity = tabbedPane.getTabCount();
+			preferences.putInt(QUANTITY_OF_LAST_USED_FILES, filesUsedQuantity);
+			String filePath = null;
+			int i = 0;
+			for(LogFilePanel logFilePanel : logFilePanels){
+				filePath = logFilePanel.getPath();
+				preferences.put(LAST_USED_FILE_PREXIX+i, filePath);
+				i++;
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 	
 	public static void main(final String[] args) {
