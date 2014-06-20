@@ -80,7 +80,6 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 		setIconImage(ResourcesFactory.getAppIcon().getImage());
 		setLayout(new BorderLayout(0,0));
 		setPreferredSize(new Dimension(800, 600));
-//		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.addWindowListener(new WindowListener() {
 			
 			@Override
@@ -101,12 +100,11 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 			
 			@Override
 			public void windowClosing(WindowEvent e) {
-				saveLastOpenedFiles();
+				exitApplication();
 			}
 			
 			@Override
 			public void windowClosed(WindowEvent e) {
-				System.exit(0);
 			}
 			
 			@Override
@@ -365,7 +363,7 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.exit(0);
+				exitApplication();
 			}
 
 		});
@@ -481,6 +479,11 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+	}
+	
+	protected void exitApplication(){
+		saveLastOpenedFiles();
+		System.exit(0);
 	}
 	
 	public static void main(final String[] args) {
