@@ -227,7 +227,7 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 	protected LogFilePanel getCurrentLogFilePanel() {
 		//It could have more than one logFilePanels
 		int tabIndex = tabbedPane.getSelectedIndex();
-		if(tabIndex>-1){
+		if(tabIndex > -1){
 			return logFilePanels.get(tabIndex);
 		}else{
 			return null;
@@ -249,23 +249,36 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 		}
 	}
 
-	public void openFiles(final File[] files) {
+	public synchronized void openFiles(final File[] files) {
 		openButton.setEnabled(false);
 		SwingWorker<Void, String> worker = new SwingWorker<Void, String>(){
 
 			@Override
 			protected Void doInBackground() throws Exception {
-				for (File file : files) {
-					publish(file.getName());
-					if(!isAlreadyOpen(file)){
-						openLogFile(file);
-					}else{
-						//selects the already open file
-						int index = getIndexFromFilePath(file.getPath());
-						tabbedPane.setSelectedIndex(index);
+				try{
+					synchronized (JFollowTailFrame.this) {
+						for (File file : files) {
+							publish(file.getName());
+							if(!isAlreadyOpen(file)){
+								openLogFile(file);
+							}else{
+								//selects the already open file
+								int index = getIndexFromFilePath(file.getPath());
+								tabbedPane.setSelectedIndex(index);
+							}
+							//saves last file used in user preferences
+							preferences.put(LAST_PATH_USED, file.getAbsolutePath());
+						}
 					}
-					//saves last file used in user preferences
-					preferences.put(LAST_PATH_USED, file.getAbsolutePath());
+				}catch(Throwable t){
+					t.printStackTrace();
+					SwingUtilities.invokeLater(new Runnable() {
+						
+						@Override
+						public void run() {
+							done();
+						}
+					});
 				}
 				return null;
 			}
@@ -283,6 +296,10 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 			}
 			
 		};
+		//hides previous busyDialog
+		if(busyDialog!=null){
+			busyDialog.setVisible(false);
+		}
 		busyDialog = BusyDialog.showBusyDialog(JFollowTailFrame.this, "Loading...", worker);
 		
 	}
@@ -319,8 +336,10 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 			//Selects recent file opened
 			tabbedPane.setSelectedIndex(logFilePanels.size()-1);
 		} catch (Exception e) {
-			JOptionPane.showMessageDialog(JFollowTailFrame.this, "Error loading log file: " + (file!=null?file.getName():""), "Error in log File", JOptionPane.ERROR_MESSAGE);
+			String errorMessage = "Error loading log file: " + (file!=null?file.getName():"");
+			JOptionPane.showMessageDialog(JFollowTailFrame.this, errorMessage, "Error in log File", JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
+			throw new RuntimeException(errorMessage);
 		}
 	}
 	
@@ -428,7 +447,7 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 	            Transferable t = info.getTransferable();
 	            List<File> data;
 	            try {
-	                data = (List<File>)t.getTransferData(DataFlavor.javaFileListFlavor);
+	            	data = (List<File>)t.getTransferData(DataFlavor.javaFileListFlavor);
 	            } 
 	            catch (Exception e) { 
 	            	return false; 
