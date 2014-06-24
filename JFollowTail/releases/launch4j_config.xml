@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch4jConfig>
-  <dontWrapJar>false</dontWrapJar>
+  <dontWrapJar>true</dontWrapJar>
   <headerType>gui</headerType>
   <jar>JFollowTail.jar</jar>
   <outfile>jfollowtail.exe</outfile>
@@ -14,7 +14,7 @@
   <manifest></manifest>
   <icon>..\src\resources\log.ico</icon>
   <jre>
-    <path></path>
+    <path>jre</path>
     <bundledJre64Bit>false</bundledJre64Bit>
     <minVersion>1.6.0</minVersion>
     <maxVersion></maxVersion>
