@@ -256,19 +256,17 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 			@Override
 			protected Void doInBackground() throws Exception {
 				try{
-					synchronized (JFollowTailFrame.this) {
-						for (File file : files) {
-							publish(file.getName());
-							if(!isAlreadyOpen(file)){
-								openLogFile(file);
-							}else{
-								//selects the already open file
-								int index = getIndexFromFilePath(file.getPath());
-								tabbedPane.setSelectedIndex(index);
-							}
-							//saves last file used in user preferences
-							preferences.put(LAST_PATH_USED, file.getAbsolutePath());
+					for (File file : files) {
+						publish(file.getName());
+						if(!isAlreadyOpen(file)){
+							openLogFile(file);
+						}else{
+							//selects the already open file
+							int index = getIndexFromFilePath(file.getPath());
+							tabbedPane.setSelectedIndex(index);
 						}
+						//saves last file used in user preferences
+						preferences.put(LAST_PATH_USED, file.getAbsolutePath());
 					}
 				}catch(Throwable t){
 					t.printStackTrace();
@@ -324,10 +322,10 @@ public class JFollowTailFrame extends JFrame implements PropertyChangeListener{
 		return -1;
 	}
 
-	private void openLogFile(File file){
+	protected void openLogFile(File file){
 		try{
-			LogFilePanel logFilePanel = new LogFilePanel(this);
-			logFilePanel.addPropertyChangeListener(this);
+			LogFilePanel logFilePanel = new LogFilePanel(JFollowTailFrame.this);
+			logFilePanel.addPropertyChangeListener(JFollowTailFrame.this);
 			logFilePanels.add(logFilePanel);
 			LogFile logFile = new LogFile(file);
 			logFilePanel.setLogFile(logFile);
