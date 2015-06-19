@@ -1,3 +1,4 @@
+![](https://github.com/sergiocormio/j-follow-tail/blob/master/JFollowTail/src/resources/log-icon_128.png)
 # j-follow-tail
 
 Another free real-time log file monitoring tool. Made in Java.
