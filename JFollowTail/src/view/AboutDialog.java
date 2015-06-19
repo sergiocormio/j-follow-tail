@@ -29,7 +29,7 @@ public class AboutDialog extends JDialog {
 	private static final String APP_NAME= "JFollowTail";
 	private static final String NAME_AND_VERSION = APP_NAME + " 1.0";
 	private static final String LOGO_PROVIDER_LINK = "http://www.pelfusion.com";
-	private static final String APP_WEB_PAGE_LINK = "https://code.google.com/p/j-follow-tail";
+	private static final String APP_WEB_PAGE_LINK = "https://github.com/sergiocormio/j-follow-tail";
 	private static final String SPECIAL_THANKS_TEXT = "Special thanks to Andrés Gutierrez Camacho, Pablo Cúneo and the Argentinian development team of 911 Emergencies system.";
 	
 	/**
