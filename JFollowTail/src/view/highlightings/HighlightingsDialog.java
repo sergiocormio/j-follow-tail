@@ -39,6 +39,7 @@ import javax.swing.table.TableColumnModel;
 import resources.ResourcesFactory;
 
 public class HighlightingsDialog extends JDialog {
+	private static final Dimension DIALOG_DIMENSION = new Dimension(380,400);
 	/**
 	 * 
 	 */
@@ -67,9 +68,9 @@ public class HighlightingsDialog extends JDialog {
 		createCRUDPanel();
 		this.add(dialogPanel);
 		pack();
-		setPreferredSize(new Dimension(350,400));
-		setSize(350, 400);
-		setMaximumSize(new Dimension(350,400));
+		setPreferredSize(DIALOG_DIMENSION);
+		setSize(DIALOG_DIMENSION);
+		setMaximumSize(DIALOG_DIMENSION);
 		setResizable(false);
 		setLocationRelativeTo(this.getOwner());
 		setModal(true);
