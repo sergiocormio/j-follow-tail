@@ -39,9 +39,9 @@ import javax.swing.table.TableColumnModel;
 import resources.ResourcesFactory;
 
 public class HighlightingsDialog extends JDialog {
-	private static final Dimension DIALOG_DIMENSION = new Dimension(380,400);
+	private static final Dimension DIALOG_DIMENSION = new Dimension(440,400);
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 3825981838950942111L;
 	public static final String LIST_CHANGED_EVENT = "List_changed_event";
@@ -70,8 +70,6 @@ public class HighlightingsDialog extends JDialog {
 		pack();
 		setPreferredSize(DIALOG_DIMENSION);
 		setSize(DIALOG_DIMENSION);
-		setMaximumSize(DIALOG_DIMENSION);
-		setResizable(false);
 		setLocationRelativeTo(this.getOwner());
 		setModal(true);
 	}
